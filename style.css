@@ -1,0 +1,128 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #111, #000);
+  color: white;
+  overflow: hidden;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: url("https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1600&q=80")
+    center/cover no-repeat;
+  opacity: 0.18;
+  filter: blur(2px);
+}
+
+.container {
+  position: relative;
+  z-index: 2;
+  padding: 30px;
+  max-width: 900px;
+  margin: auto;
+  text-align: center;
+}
+
+.top h1 {
+  font-size: 3rem;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.tagline {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+.timer {
+  margin-top: 12px;
+  padding: 10px;
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  opacity: 0.9;
+}
+
+.card {
+  margin-top: 30px;
+  padding: 25px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+}
+
+.card h2 {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+}
+
+.card p {
+  opacity: 0.85;
+  margin-bottom: 15px;
+}
+
+.hud {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+#startBtn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #00ff99;
+  font-weight: bold;
+}
+
+#startBtn:hover {
+  background: #00cc77;
+}
+
+.game-area {
+  width: 100%;
+  height: 320px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.2);
+  position: relative;
+  overflow: hidden;
+  background: rgba(0,0,0,0.35);
+}
+
+.target {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, red, orange);
+  box-shadow: 0 0 15px rgba(255,0,0,0.7);
+  cursor: pointer;
+  display: none;
+}
+
+.note {
+  margin-top: 12px;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.footer {
+  margin-top: 25px;
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
