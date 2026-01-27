@@ -1,10 +1,10 @@
-import {THREE} from './three-defs.js';
+import { THREE } from './three-defs.js';
 
-import {entity} from './entity.js';
-import {math} from './math.js';
+import { entity } from './entity.js';
+import { math } from './math.js';
 
-import {player_input} from './player-input.js';
-import {passes} from './passes.js';
+import { player_input } from './player-input.js';
+import { passes } from './passes.js';
 
 
 export const first_person_camera = (() => {
@@ -41,9 +41,12 @@ export const first_person_camera = (() => {
       this.thetaSpeed_ = 5;
       this.headBobActive_ = false;
       this.headBobTimer_ = 0;
-      this.headBobSpeed_ = 15;
-      // VIDEO HACK, original 0.01
-      this.headBobHeight_ = 0.01;
+      // Smoother head bob settings
+      this.headBobSpeed_ = 12; // Slightly slower for smoother feel
+      this.headBobHeight_ = 0.015; // Slightly more noticeable
+      // Smooth head bob interpolation
+      this.currentHeadBob_ = 0;
+      this.targetHeadBob_ = 0;
       this.walkSpeed_ = 10;
       this.strafeSpeed_ = 10;
       this.powerTime_ = 1;
@@ -65,34 +68,28 @@ export const first_person_camera = (() => {
       this.Parent.SetPosition(this.translation_);
       this.Parent.SetQuaternion(this.rotation_);
     }
-  
-    updateCamera_(_) {
+
+    updateCamera_(timeElapsedS) {
       this.camera_.quaternion.copy(this.rotation_);
       this.camera_.position.copy(this.translation_);
-      this.camera_.position.y += Math.sin(this.headBobTimer_ * this.headBobSpeed_) * this.headBobHeight_;
+
+      // Smooth head bob interpolation for buttery smooth movement
+      this.targetHeadBob_ = Math.sin(this.headBobTimer_ * this.headBobSpeed_) * this.headBobHeight_;
+      // Lerp to target for smooth transitions (higher value = faster response)
+      this.currentHeadBob_ = this.currentHeadBob_ + (this.targetHeadBob_ - this.currentHeadBob_) * Math.min(1.0, timeElapsedS * 15);
+      this.camera_.position.y += this.currentHeadBob_;
+
       this.group_.position.copy(this.translation_);
       this.group_.quaternion.copy(this.rotation_);
-  
-      // const forward = new THREE.Vector3(0, 0, -1);
-      // forward.applyQuaternion(this.rotation_);
-  
-      // forward.multiplyScalar(100);
-      // forward.add(this.translation_);
-  
-      // const hits = this.FindEntity('physics').GetComponent('AmmoJSController').RayTest(this.translation_, forward);
-
-      // if (hits.length > 0) {
-      //   this.camera_.lookAt(hits[0].position);
-      // }
     }
-  
+
     updateHeadBob_(timeElapsedS) {
       if (this.headBobActive_) {
         const wavelength = Math.PI;
         const nextStep = 1 + Math.floor(((this.headBobTimer_ + 0.000001) * this.headBobSpeed_) / wavelength);
         const nextStepTime = nextStep * wavelength / this.headBobSpeed_;
         this.headBobTimer_ = Math.min(this.headBobTimer_ + timeElapsedS, nextStepTime);
-  
+
         if (this.headBobTimer_ == nextStepTime) {
           this.headBobActive_ = false;
           this.Broadcast({
@@ -102,7 +99,7 @@ export const first_person_camera = (() => {
         }
       }
     }
-  
+
     updateTranslation_(timeElapsedS) {
       const input = this.GetComponent('PlayerInput');
 
@@ -111,11 +108,11 @@ export const first_person_camera = (() => {
 
       const qx = new THREE.Quaternion();
       qx.setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.phi_);
-  
+
       const forward = new THREE.Vector3(0, 0, -1);
       forward.applyQuaternion(qx);
       forward.multiplyScalar(forwardVelocity * timeElapsedS * this.walkSpeed_);
-  
+
       const left = new THREE.Vector3(-1, 0, 0);
       left.applyQuaternion(qx);
       left.multiplyScalar(strafeVelocity * timeElapsedS * this.strafeSpeed_);
@@ -124,17 +121,20 @@ export const first_person_camera = (() => {
 
       // this.position.setValue( x, y + this.verticalVelocity, z );
       // this.position.direction( this.q );
-  
+
       this.Parent.Attributes.Physics.CharacterController.setWalkDirection(walk);
       // this.body_.motionState_.getWorldTransform(this.body_.transform_);
       const t = this.Parent.Attributes.Physics.CharacterController.body_.getWorldTransform();
       const pos = t.getOrigin();
       const pos3 = new THREE.Vector3(pos.x(), pos.y(), pos.z());
 
-      this.translation_.lerp(pos3, 0.75);
+      // Smooth frame-rate independent interpolation for translation
+      // Higher multiplier = faster response, but still smooth
+      const lerpFactor = 1.0 - Math.pow(0.001, 12 * timeElapsedS);
+      this.translation_.lerp(pos3, lerpFactor);
       // this.translation_.add(forward);
       // this.translation_.add(left);
-  
+
       if (input.key(player_input.KEYS.SPACE)) {
         this.headBobActive_ = false;
         this.Parent.Attributes.Physics.CharacterController.jump();
@@ -171,44 +171,44 @@ export const first_person_camera = (() => {
         }
       } else {
         this.powerTime_ += timeElapsedS / POWER_RECHARGE;
-        this.powerTime_ = math.sat(this.powerTime_);  
+        this.powerTime_ = math.sat(this.powerTime_);
       }
 
       this.FindEntity('ui').Broadcast(
-          {topic: 'ui.charge', value: this.powerTime_})
+        { topic: 'ui.charge', value: this.powerTime_ })
 
       const power = this.power_;
 
       const threejs = this.FindEntity('threejs').GetComponent('ThreeJSController');
 
       threejs.radialBlur_.uniforms.strength.value = math.lerp(
-          timeElapsedS * 5.0, threejs.radialBlur_.uniforms.strength.value, power ? 0.5 : 0);
+        timeElapsedS * 5.0, threejs.radialBlur_.uniforms.strength.value, power ? 0.5 : 0);
       if (threejs.radialBlur_.uniforms.strength.value < 0.001 && !power) {
         threejs.radialBlur_.uniforms.strength.value = 0;
       }
       this.walkSpeed_ = power ? 30 : 10;
       this.Parent.Attributes.Physics.CharacterController.setJumpMultiplier(power ? 2.25 : 1);
     }
-  
+
     updateRotation_(timeElapsedS) {
       const input = this.GetComponent('PlayerInput');
 
       const xh = input.current_.mouseXDelta / window.innerWidth;
       const yh = input.current_.mouseYDelta / window.innerHeight;
-  
+
       this.phi_ += -xh * this.phiSpeed_;
       this.theta_ = math.clamp(this.theta_ + -yh * this.thetaSpeed_, -Math.PI / 3, Math.PI / 3);
-  
+
       const qx = new THREE.Quaternion();
       qx.setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.phi_);
       const qz = new THREE.Quaternion();
       qz.setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.theta_);
-  
+
       const q = new THREE.Quaternion();
       q.multiply(qx);
       q.multiply(qz);
-  
-      const t = 1.0 - Math.pow(0.01, 5 * timeElapsedS);
+
+      const t = 1.0 - Math.pow(0.001, 5 * timeElapsedS);
       this.rotation_.slerp(q, t);
     }
   };

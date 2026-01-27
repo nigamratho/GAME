@@ -1,11 +1,39 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Laxigam</title>
   <link rel="stylesheet" type="text/css" href="base.css">
   <link rel="shortcut icon" href="#">
 </head>
+
 <body>
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="loading-background"></div>
+    <div class="loading-content">
+      <div class="ring-container">
+        <div class="neon-ring"></div>
+        <div class="neon-ring ring-2"></div>
+        <div class="ring-text">DEMO GAME</div>
+      </div>
+      <div class="click-prompt">
+        <span class="click-text">CLICK TO START</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Hints Overlay -->
+  <div class="control-hints" id="control-hints">
+    <div class="control-hint-box">
+      <span class="hint-key">CTRL</span>
+      <span class="hint-text">Release Mouse</span>
+      <span class="hint-divider">|</span>
+      <span class="hint-key">CTRL+ALT</span>
+      <span class="hint-text">Aim Mode</span>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/gh/kripken/ammo.js@HEAD/builds/ammo.js"></script>
   <script src="src/main.js" type="module">
   </script>
@@ -67,15 +95,16 @@
         <div class="top-left-ui-area" id="top-left-ui-area">
           <div class="row">
             <img class="objective-title-icon" src="resources/ui/double_arrow_FILL0_wght700_GRAD0_opsz48.svg"></img>
-            <div class="objective-title">Kill'm all</div>  
+            <div class="objective-title">Kill'm all</div>
           </div>
           <div class="row objective-text-background">
             <img class="objective-text-icon" src="resources/ui/token_FILL0_wght700_GRAD0_opsz48.svg"></img>
-            <div class="objective-text">Jump around and stuff</div>  
+            <div class="objective-text">Jump around and stuff</div>
           </div>
         </div>
       </div>
     </div>
   </div>
 </body>
+
 </html>

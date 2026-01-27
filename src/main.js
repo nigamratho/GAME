@@ -1,14 +1,14 @@
-import {entity_manager} from './entity-manager.js';
-import {entity} from './entity.js';
+import { entity_manager } from './entity-manager.js';
+import { entity } from './entity.js';
 
-import {load_controller} from './load-controller.js';
-import {spawners} from './spawners.js';
+import { load_controller } from './load-controller.js';
+import { spawners } from './spawners.js';
 
-import {spatial_hash_grid} from './spatial-hash-grid.js';
-import {threejs_component} from './threejs-component.js';
-import {ammojs_component} from './ammojs-component.js';
-import {blaster} from './fx/blaster.js';
-import {ui_controller} from './ui-controller.js';
+import { spatial_hash_grid } from './spatial-hash-grid.js';
+import { threejs_component } from './threejs-component.js';
+import { ammojs_component } from './ammojs-component.js';
+import { blaster } from './fx/blaster.js';
+import { ui_controller } from './ui-controller.js';
 
 
 class QuickFPS1 {
@@ -24,7 +24,7 @@ class QuickFPS1 {
 
   OnGameStarted_() {
     this.grid_ = new spatial_hash_grid.SpatialHashGrid(
-        [[-5000, -5000], [5000, 5000]], [100, 100]);
+      [[-5000, -5000], [5000, 5000]], [100, 100]);
 
     this.LoadControllers_();
 
@@ -50,9 +50,9 @@ class QuickFPS1 {
 
     const fx = new entity.Entity();
     fx.AddComponent(new blaster.BlasterSystem({
-        scene: this.scene_,
-        camera: this.camera_,
-        texture: 'resources/textures/fx/tracer.png',
+      scene: this.scene_,
+      camera: this.camera_,
+      texture: 'resources/textures/fx/tracer.png',
     }));
     this.entityManager_.Add(fx, 'fx');
 
@@ -89,10 +89,8 @@ class QuickFPS1 {
         this.Step_(t - this.previousRAF_);
         this.previousRAF_ = t;
       }
-
-      setTimeout(() => {
-        this.RAF_();
-      }, 1);
+      // Removed setTimeout for smoother rendering
+      this.RAF_();
     });
   }
 
@@ -108,17 +106,65 @@ class QuickFPS1 {
 
 
 let _APP = null;
+let _gameStarted = false;
+
+function startGame() {
+  if (_gameStarted) return;
+  _gameStarted = true;
+
+  const loadingScreen = document.getElementById('loading-screen');
+  if (loadingScreen) {
+    loadingScreen.classList.add('hidden');
+  }
+
+  // Show control hints
+  const controlHints = document.getElementById('control-hints');
+  if (controlHints) {
+    controlHints.classList.add('visible');
+    // Hide after 5 seconds
+    setTimeout(() => {
+      controlHints.classList.remove('visible');
+    }, 5000);
+  }
+
+  // Request pointer lock for smooth FPS controls
+  const container = document.getElementById('container');
+  if (container) {
+    container.requestPointerLock = container.requestPointerLock ||
+      container.mozRequestPointerLock ||
+      container.webkitRequestPointerLock;
+    container.requestPointerLock();
+  }
+}
 
 window.addEventListener('DOMContentLoaded', async () => {
-  // const _Setup = () => {
-  //   Ammo().then(function(AmmoLib) {
-  //     Ammo = AmmoLib;
-  //     _APP = new QuickFPS1();
-  //   }); 
-  //   document.body.removeEventListener('click', _Setup);
-  // };
-  // document.body.addEventListener('click', _Setup);
+  // Add loading-active class to body
+  document.body.classList.add('loading-active');
+
+  // Setup loading screen click handler
+  const loadingScreen = document.getElementById('loading-screen');
+  if (loadingScreen) {
+    loadingScreen.addEventListener('click', () => {
+      document.body.classList.remove('loading-active');
+      startGame();
+    });
+  }
+
+  // Add click-to-relock on game container
+  const container = document.getElementById('container');
+  if (container) {
+    container.addEventListener('click', () => {
+      if (_gameStarted && document.pointerLockElement === null) {
+        container.requestPointerLock = container.requestPointerLock ||
+          container.mozRequestPointerLock ||
+          container.webkitRequestPointerLock;
+        container.requestPointerLock();
+      }
+    });
+  }
+
   const AmmoLib = await Ammo();
   Ammo = AmmoLib;
   _APP = new QuickFPS1();
 });
+
